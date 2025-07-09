@@ -1,28 +1,31 @@
-name: Random Commits Bot
+name: Random Commits
 
 on:
   schedule:
-    - cron: '30 12 * * *' # runs every day at 12:30 UTC
-  workflow_dispatch:     # allow manual trigger
+    - cron: '0 12 * * *' # runs every day at 12:00 UTC
+  workflow_dispatch:      # allow manual trigger
 
 jobs:
   random-commits:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout orchestrator repo
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: '3.11'
 
       - name: Install dependencies
         run: pip install requests
 
-      - name: Run random commits
+      - name: Run random commits script
         env:
           GH_USER: ${{ secrets.GH_USER }}
           GH_PAT: ${{ secrets.GH_PAT }}
-        run: python3 random_commits.py
+        run: |
+          echo "GH_USER=$GH_USER"
+          echo "GH_PAT is set? [${{ secrets.GH_PAT != '' }}]"
+          python3 random_commits.py
