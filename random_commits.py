@@ -18,6 +18,9 @@ HEADERS = {
     "Accept": "application/vnd.github+json",
 }
 
+def setup_git_config(repo_dir):
+    subprocess.run(["git", "config", "user.name", GITHUB_USER], cwd=repo_dir, check=True)
+    subprocess.run(["git", "config", "user.email", f"{GITHUB_USER}@users.noreply.github.com"], cwd=repo_dir, check=True)
 
 def get_repos():
     url = f"https://api.github.com/users/{GH_USER}/repos?per_page=100&type=owner"
@@ -93,8 +96,9 @@ def main():
     authenticated_url = chosen_repo.replace(
         "https://", f"https://{GH_USER}:{GH_PAT}@"
     )
-
+    
     repo_path = clone_repo(authenticated_url)
+    setup_git_config(repo_path)
 
     for i in range(COMMITS_PER_DAY):
         make_random_change(repo_path)
