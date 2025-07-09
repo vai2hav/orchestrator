@@ -9,7 +9,7 @@ from datetime import datetime
 GH_USER = os.environ["GH_USER"]
 GH_PAT = os.environ["GH_PAT"]
 
-CLONE_DIR = "workspace"
+CLONE_DIR = "/tmp/workspace"
 COMMITS_PER_DAY = 10
 DAYS_PER_WEEK = 7  # Run on 7 days
 
