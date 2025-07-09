@@ -11,7 +11,7 @@ GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 
 CLONE_DIR = "workspace"
 COMMITS_PER_DAY = 10
-DAYS_PER_WEEK = 4
+DAYS_PER_WEEK = 7
 
 # Headers for GitHub API
 HEADERS = {
