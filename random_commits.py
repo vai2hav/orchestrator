@@ -6,22 +6,22 @@ import requests
 from datetime import datetime
 
 # Configuration (from environment variables)
-GITHUB_USER = os.environ["GH_USER"]
-GITHUB_TOKEN = os.environ["GH_PAT"]
+GH_USER = os.environ["GH_USER"]
+GH_TOKEN = os.environ["GH_PAT"]
 
 CLONE_DIR = "workspace"
 COMMITS_PER_DAY = 10
 DAYS_PER_WEEK = 7  # updated to 7 days
 
 HEADERS = {
-    "Authorization": f"token {GITHUB_TOKEN}",
+    "Authorization": f"token {GH_TOKEN}",
     "Accept": "application/vnd.github+json",
 }
 
 
 def get_repos():
     """Fetch all repositories owned by the user (non-archived)"""
-    url = f"https://api.github.com/users/{GITHUB_USER}/repos?per_page=100&type=owner"
+    url = f"https://api.github.com/users/{GH_USER}/repos?per_page=100&type=owner"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
     repos = resp.json()
@@ -89,7 +89,7 @@ def main():
 
     # Inject PAT for HTTPS authentication
     authenticated_url = chosen_repo.replace(
-        "https://", f"https://{GITHUB_USER}:{GITHUB_TOKEN}@"
+        "https://", f"https://{GH_USER}:{GH_TOKEN}@"
     )
 
     repo_path = clone_repo(authenticated_url)
