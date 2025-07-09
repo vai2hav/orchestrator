@@ -5,13 +5,13 @@ import subprocess
 import requests
 from datetime import datetime
 
-# Configuration (from environment variables)
+# Configuration
 GH_USER = os.environ["GH_USER"]
 GH_PAT = os.environ["GH_PAT"]
 
 CLONE_DIR = "workspace"
 COMMITS_PER_DAY = 10
-DAYS_PER_WEEK = 7  # updated to 7 days
+DAYS_PER_WEEK = 7  # Run on 7 days
 
 HEADERS = {
     "Authorization": f"token {GH_PAT}",
@@ -20,7 +20,6 @@ HEADERS = {
 
 
 def get_repos():
-    """Fetch all repositories owned by the user (non-archived)"""
     url = f"https://api.github.com/users/{GH_USER}/repos?per_page=100&type=owner"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
@@ -32,15 +31,14 @@ def get_repos():
 
 
 def pick_repo(repos):
-    """Pick one random repo"""
     return random.choice(repos)
 
 
 def make_random_change(repo_dir):
-    """Create a random file with random contents and commit it"""
     filename = os.path.join(
-        repo_dir, f"file_{random.randint(1000, 9999)}.txt"
+        repo_dir, f"file_{random.randint(1000,9999)}.txt"
     )
+    os.makedirs(repo_dir, exist_ok=True)  # make sure path exists
     content = "".join(random.choices(string.ascii_letters + string.digits, k=200))
     with open(filename, "w") as f:
         f.write(content)
@@ -55,18 +53,24 @@ def push(repo_dir):
 
 
 def clone_repo(authenticated_url):
-    """Clone the repo into workspace"""
     repo_name = authenticated_url.split("/")[-1].replace(".git", "")
     repo_path = os.path.join(CLONE_DIR, repo_name)
+
+    os.makedirs(CLONE_DIR, exist_ok=True)
+
     if os.path.exists(repo_path):
+        print(f"✅ Repo already cloned at {repo_path}, pulling latest")
         subprocess.run(["git", "pull"], cwd=repo_path, check=True)
     else:
+        print(f"🚀 Cloning repo into {repo_path}")
         subprocess.run(["git", "clone", authenticated_url, repo_path], cwd=CLONE_DIR, check=True)
+
+    if not os.path.exists(repo_path):
+        raise RuntimeError(f"Failed to clone repository into {repo_path}")
     return repo_path
 
 
 def today_is_selected(selected_days):
-    """Return True if today is one of the selected days"""
     today = datetime.today().weekday()
     return today in selected_days
 
@@ -74,20 +78,18 @@ def today_is_selected(selected_days):
 def main():
     os.makedirs(CLONE_DIR, exist_ok=True)
 
-    # Seed random per week number so days stay same within week
     week_num = datetime.today().isocalendar()[1]
     random.seed(week_num)
     selected_days = random.sample(range(7), DAYS_PER_WEEK)
 
     if not today_is_selected(selected_days):
-        print(f"✅ Today is not one of the {DAYS_PER_WEEK} selected days. Skipping.")
+        print("✅ Today is not one of the selected days. Skipping.")
         return
 
     repos = get_repos()
     chosen_repo = pick_repo(repos)
     print(f"🎯 Chosen repo: {chosen_repo}")
 
-    # Inject PAT for HTTPS authentication
     authenticated_url = chosen_repo.replace(
         "https://", f"https://{GH_USER}:{GH_PAT}@"
     )
