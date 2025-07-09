@@ -23,6 +23,6 @@ jobs:
 
       - name: Run random commits
         env:
-          GITHUB_USER: ${{ secrets.GH_USER }}
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GH_USER: ${{ secrets.GH_USER }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: python3 random_commits.py
