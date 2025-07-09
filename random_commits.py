@@ -5,15 +5,14 @@ import subprocess
 import requests
 from datetime import datetime
 
-# Configuration (all from environment)
-GITHUB_USER = os.environ["GITHUB_USER"]
-GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
+# Configuration (from environment variables)
+GITHUB_USER = os.environ["GH_USER"]
+GITHUB_TOKEN = os.environ["GH_PAT"]
 
 CLONE_DIR = "workspace"
 COMMITS_PER_DAY = 10
-DAYS_PER_WEEK = 7
+DAYS_PER_WEEK = 4
 
-# Headers for GitHub API
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",
     "Accept": "application/vnd.github+json",
@@ -21,15 +20,15 @@ HEADERS = {
 
 
 def get_repos():
-    """Fetch all repositories owned by the user"""
+    """Fetch all repositories owned by the user (non-archived)"""
     url = f"https://api.github.com/users/{GITHUB_USER}/repos?per_page=100&type=owner"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
     repos = resp.json()
-    ssh_urls = [repo["ssh_url"] for repo in repos if not repo["archived"]]
-    if not ssh_urls:
+    https_urls = [repo["clone_url"] for repo in repos if not repo["archived"]]
+    if not https_urls:
         raise RuntimeError("No repositories found.")
-    return ssh_urls
+    return https_urls
 
 
 def pick_repo(repos):
@@ -38,7 +37,7 @@ def pick_repo(repos):
 
 
 def make_random_change(repo_dir):
-    """Create a random file with random contents"""
+    """Create a random file with random contents and commit it"""
     filename = os.path.join(
         repo_dir, f"file_{random.randint(1000,9999)}.txt"
     )
@@ -55,14 +54,14 @@ def push(repo_dir):
     subprocess.run(["git", "push"], cwd=repo_dir, check=True)
 
 
-def clone_repo(ssh_url):
-    """Clone the repo into workspace if not already cloned"""
-    repo_name = ssh_url.split("/")[-1].replace(".git", "")
+def clone_repo(authenticated_url):
+    """Clone the repo into workspace"""
+    repo_name = authenticated_url.split("/")[-1].replace(".git", "")
     repo_path = os.path.join(CLONE_DIR, repo_name)
     if os.path.exists(repo_path):
         subprocess.run(["git", "pull"], cwd=repo_path, check=True)
     else:
-        subprocess.run(["git", "clone", ssh_url, repo_path], cwd=CLONE_DIR, check=True)
+        subprocess.run(["git", "clone", authenticated_url, repo_path], cwd=CLONE_DIR, check=True)
     return repo_path
 
 
@@ -88,7 +87,12 @@ def main():
     chosen_repo = pick_repo(repos)
     print(f"🎯 Chosen repo: {chosen_repo}")
 
-    repo_path = clone_repo(chosen_repo)
+    # Inject PAT for HTTPS authentication
+    authenticated_url = chosen_repo.replace(
+        "https://", f"https://{GITHUB_USER}:{GITHUB_TOKEN}@"
+    )
+
+    repo_path = clone_repo(authenticated_url)
 
     for i in range(COMMITS_PER_DAY):
         make_random_change(repo_path)
