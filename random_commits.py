@@ -7,14 +7,14 @@ from datetime import datetime
 
 # Configuration (from environment variables)
 GH_USER = os.environ["GH_USER"]
-GH_TOKEN = os.environ["GH_PAT"]
+GH_PAT = os.environ["GH_PAT"]
 
 CLONE_DIR = "workspace"
 COMMITS_PER_DAY = 10
 DAYS_PER_WEEK = 7  # updated to 7 days
 
 HEADERS = {
-    "Authorization": f"token {GH_TOKEN}",
+    "Authorization": f"token {GH_PAT}",
     "Accept": "application/vnd.github+json",
 }
 
@@ -89,7 +89,7 @@ def main():
 
     # Inject PAT for HTTPS authentication
     authenticated_url = chosen_repo.replace(
-        "https://", f"https://{GH_USER}:{GH_TOKEN}@"
+        "https://", f"https://{GH_USER}:{GH_PAT}@"
     )
 
     repo_path = clone_repo(authenticated_url)
