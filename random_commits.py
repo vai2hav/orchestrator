@@ -5,64 +5,98 @@ import subprocess
 import requests
 from datetime import datetime
 
-# config
-GITHUB_USER = "your-username"
-GITHUB_TOKEN = "your-token"
-CLONE_DIR = "/tmp/github-repos"
+# Configuration (all from environment)
+GITHUB_USER = os.environ["GITHUB_USER"]
+GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
+
+CLONE_DIR = "workspace"
 COMMITS_PER_DAY = 10
 DAYS_PER_WEEK = 4
 
-# get list of repos
-def get_repos():
-    resp = requests.get(
-        f"https://api.github.com/users/{GITHUB_USER}/repos",
-        auth=(GITHUB_USER, GITHUB_TOKEN),
-    )
-    resp.raise_for_status()
-    return [repo["ssh_url"] for repo in resp.json()]
+# Headers for GitHub API
+HEADERS = {
+    "Authorization": f"token {GITHUB_TOKEN}",
+    "Accept": "application/vnd.github+json",
+}
 
-# pick random repo
+
+def get_repos():
+    """Fetch all repositories owned by the user"""
+    url = f"https://api.github.com/users/{GITHUB_USER}/repos?per_page=100&type=owner"
+    resp = requests.get(url, headers=HEADERS)
+    resp.raise_for_status()
+    repos = resp.json()
+    ssh_urls = [repo["ssh_url"] for repo in repos if not repo["archived"]]
+    if not ssh_urls:
+        raise RuntimeError("No repositories found.")
+    return ssh_urls
+
+
 def pick_repo(repos):
+    """Pick one random repo"""
     return random.choice(repos)
 
-# make random file change
-def make_change(repo_dir):
-    filename = os.path.join(repo_dir, f"dummy_{random.randint(1,10000)}.txt")
+
+def make_random_change(repo_dir):
+    """Create a random file with random contents"""
+    filename = os.path.join(
+        repo_dir, f"file_{random.randint(1000,9999)}.txt"
+    )
+    content = "".join(random.choices(string.ascii_letters + string.digits, k=200))
     with open(filename, "w") as f:
-        f.write("".join(random.choices(string.ascii_letters + string.digits, k=100)))
+        f.write(content)
+
     subprocess.run(["git", "add", "."], cwd=repo_dir, check=True)
-    subprocess.run(["git", "commit", "-m", "Random commit"], cwd=repo_dir, check=True)
+    msg = f"Random commit {datetime.utcnow().isoformat()}"
+    subprocess.run(["git", "commit", "-m", msg], cwd=repo_dir, check=True)
+
+
+def push(repo_dir):
     subprocess.run(["git", "push"], cwd=repo_dir, check=True)
 
-# clone if needed
-def clone_repo(repo_url):
-    repo_name = repo_url.split("/")[-1].replace(".git", "")
+
+def clone_repo(ssh_url):
+    """Clone the repo into workspace if not already cloned"""
+    repo_name = ssh_url.split("/")[-1].replace(".git", "")
     repo_path = os.path.join(CLONE_DIR, repo_name)
-    if not os.path.exists(repo_path):
-        subprocess.run(["git", "clone", repo_url], cwd=CLONE_DIR, check=True)
+    if os.path.exists(repo_path):
+        subprocess.run(["git", "pull"], cwd=repo_path, check=True)
+    else:
+        subprocess.run(["git", "clone", ssh_url, repo_path], cwd=CLONE_DIR, check=True)
     return repo_path
 
-def today_should_run(selected_days):
+
+def today_is_selected(selected_days):
+    """Return True if today is one of the selected days"""
     today = datetime.today().weekday()
     return today in selected_days
+
 
 def main():
     os.makedirs(CLONE_DIR, exist_ok=True)
 
-    # choose 4 random days at start of week (0=Mon, 6=Sun)
-    random.seed(datetime.today().isocalendar()[1])  # seed per week
-    days_this_week = random.sample(range(7), DAYS_PER_WEEK)
+    # Seed random per week number so days stay same within week
+    week_num = datetime.today().isocalendar()[1]
+    random.seed(week_num)
+    selected_days = random.sample(range(7), DAYS_PER_WEEK)
 
-    if not today_should_run(days_this_week):
-        print("Today is not one of the selected days. Exiting.")
+    if not today_is_selected(selected_days):
+        print("✅ Today is not one of the 4 selected days. Skipping.")
         return
 
     repos = get_repos()
-    repo_url = pick_repo(repos)
-    repo_path = clone_repo(repo_url)
+    chosen_repo = pick_repo(repos)
+    print(f"🎯 Chosen repo: {chosen_repo}")
 
-    for _ in range(COMMITS_PER_DAY):
-        make_change(repo_path)
+    repo_path = clone_repo(chosen_repo)
+
+    for i in range(COMMITS_PER_DAY):
+        make_random_change(repo_path)
+        print(f"✅ Commit {i+1} done")
+
+    push(repo_path)
+    print("🚀 All commits pushed.")
+
 
 if __name__ == "__main__":
     main()
