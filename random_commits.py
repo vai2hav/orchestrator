@@ -11,7 +11,7 @@ GITHUB_TOKEN = os.environ["GH_PAT"]
 
 CLONE_DIR = "workspace"
 COMMITS_PER_DAY = 10
-DAYS_PER_WEEK = 4
+DAYS_PER_WEEK = 7  # updated to 7 days
 
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",
@@ -39,7 +39,7 @@ def pick_repo(repos):
 def make_random_change(repo_dir):
     """Create a random file with random contents and commit it"""
     filename = os.path.join(
-        repo_dir, f"file_{random.randint(1000,9999)}.txt"
+        repo_dir, f"file_{random.randint(1000, 9999)}.txt"
     )
     content = "".join(random.choices(string.ascii_letters + string.digits, k=200))
     with open(filename, "w") as f:
@@ -80,7 +80,7 @@ def main():
     selected_days = random.sample(range(7), DAYS_PER_WEEK)
 
     if not today_is_selected(selected_days):
-        print("✅ Today is not one of the 4 selected days. Skipping.")
+        print(f"✅ Today is not one of the {DAYS_PER_WEEK} selected days. Skipping.")
         return
 
     repos = get_repos()
