@@ -19,8 +19,8 @@ HEADERS = {
 }
 
 def setup_git_config(repo_dir):
-    subprocess.run(["git", "config", "user.name", GITHUB_USER], cwd=repo_dir, check=True)
-    subprocess.run(["git", "config", "user.email", f"{GITHUB_USER}@users.noreply.github.com"], cwd=repo_dir, check=True)
+    subprocess.run(["git", "config", "user.name", GH_USER], cwd=repo_dir, check=True)
+    subprocess.run(["git", "config", "user.email", f"{GH_USER}@users.noreply.github.com"], cwd=repo_dir, check=True)
 
 def get_repos():
     url = f"https://api.github.com/users/{GH_USER}/repos?per_page=100&type=owner"
