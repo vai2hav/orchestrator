@@ -37,19 +37,34 @@ def pick_repo(repos):
     return random.choice(repos)
 
 
+# def make_random_change(repo_dir):
+#     filename = os.path.join(
+#         repo_dir, f"file_{random.randint(1000,9999)}.txt"
+#     )
+#     os.makedirs(repo_dir, exist_ok=True)  # make sure path exists
+#     content = "".join(random.choices(string.ascii_letters + string.digits, k=200))
+#     with open(filename, "w") as f:
+#         f.write(content)
+
+#     subprocess.run(["git", "add", "."], cwd=repo_dir, check=True)
+#     msg = f"Random commit {datetime.utcnow().isoformat()}"
+#     subprocess.run(["git", "commit", "-m", msg], cwd=repo_dir, check=True)
 def make_random_change(repo_dir):
-    filename = os.path.join(
-        repo_dir, f"file_{random.randint(1000,9999)}.txt"
-    )
-    os.makedirs(repo_dir, exist_ok=True)  # make sure path exists
-    content = "".join(random.choices(string.ascii_letters + string.digits, k=200))
-    with open(filename, "w") as f:
+    filename = os.path.join(repo_dir, "heartbeat.txt")
+    content = f"{datetime.utcnow().isoformat()} | random: {random.randint(1000,9999)}\n"
+    with open(filename, "a") as f:
         f.write(content)
 
-    subprocess.run(["git", "add", "."], cwd=repo_dir, check=True)
-    msg = f"Random commit {datetime.utcnow().isoformat()}"
-    subprocess.run(["git", "commit", "-m", msg], cwd=repo_dir, check=True)
+    subprocess.run(["git", "add", filename], cwd=repo_dir, check=True)
 
+    msg = f"Random commit {datetime.utcnow().isoformat()}"
+
+    # Check if there’s actually anything to commit
+    result = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=repo_dir)
+    if result.returncode == 0:
+        print("⚠️ Nothing to commit, skipping this commit.")
+    else:
+        subprocess.run(["git", "commit", "-m", msg], cwd=repo_dir, check=True)
 
 def push(repo_dir):
     subprocess.run(["git", "push"], cwd=repo_dir, check=True)
