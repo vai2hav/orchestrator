@@ -41,7 +41,7 @@ def get_target_repo():
 
 
 def make_random_change(repo_dir):
-    filename = os.path.join(repo_dir, "heartbeat.txt")
+    filename = os.path.join(repo_dir, "logger.txt")
     line = f"{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} | {random.randint(1000,9999)}\n"
     with open(filename, "a") as f:
         f.write(line)
