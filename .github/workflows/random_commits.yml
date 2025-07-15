@@ -25,7 +25,9 @@ jobs:
         env:
           GH_USER: ${{ secrets.GH_USER }}
           GH_PAT: ${{ secrets.GH_PAT }}
+          TARGET_REPO: ${{ secrets.TARGET_REPO }}
         run: |
           echo "GH_USER=$GH_USER"
           echo "GH_PAT is set? [${{ secrets.GH_PAT != '' }}]"
+          echo "TARGET_REPO is set? [${{ secrets.TARGET_REPO != '' }}]"
           python3 random_commits.py
