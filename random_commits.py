@@ -10,7 +10,7 @@ GH_PAT = os.environ["GH_PAT"]
 TARGET_REPO = os.environ["TARGET_REPO"]  # NEW: required repo name
 
 CLONE_DIR = "/tmp/workspace"
-COMMITS_PER_DAY_PLAN = [5, 2, 1, 1]  # Total 8 commits over 4 days
+COMMITS_PER_DAY_PLAN = [5, 2, 1, 1, 1, 1, 2]  # Total 8 commits over 4 days
 
 HEADERS = {
     "Authorization": f"token {GH_PAT}",
@@ -108,7 +108,7 @@ def main():
     week_num = datetime.today().isocalendar()[1]
     random.seed(week_num)
 
-    selected_days = random.sample(range(7), 4)
+    selected_days = random.sample(range(7), 7)
     random.shuffle(COMMITS_PER_DAY_PLAN)
     day_commit_map = dict(zip(selected_days, COMMITS_PER_DAY_PLAN))
 
