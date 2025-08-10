@@ -108,7 +108,8 @@ def main():
     week_num = datetime.today().isocalendar()[1]
     random.seed(week_num)
 
-    selected_days = random.sample(range(7), 4)
+    # selected_days = random.sample(range(7), 4)
+    selected_days = random.sample(range(14), 4)
     random.shuffle(COMMITS_PER_DAY_PLAN)
     day_commit_map = dict(zip(selected_days, COMMITS_PER_DAY_PLAN))
 
